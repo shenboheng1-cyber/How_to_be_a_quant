@@ -1,0 +1,68 @@
+# ============================================================
+# 策略主配置 —— 复现银河证券《宏观信息驱动的宽基ETF风格轮动策略》(2025-04-30)
+# 所有策略超参集中于此, 代码中禁止硬编码
+# ============================================================
+
+backtest:
+  # 复现对齐区间（报告口径）
+  start_date: "2020-01-02"
+  end_date: "2026-04-17"
+  # Phase3 扩展区间（数据需回溯至 ~2014 以满足 2年暴露窗口 + 104周Logistic窗口）
+  extended_start_date: "2016-01-04"
+  data_lookback_start: "2014-01-01"
+  initial_capital: 100000000        # 1亿
+  cost_rate: 0.0003                 # 单边 0.03%
+  benchmark_index: "000985.CSI"     # 中证全指
+  rebalance: "W-LAST"               # 每周最后一个交易日发信号
+  execution_lag: 1                  # T+1 按 ETF 净值/收盘执行
+
+# 报告复现目标（对账用, 见 表7）
+reproduction_targets:
+  ann_return: 0.1905
+  sharpe: 1.0370
+  calmar: 1.0980
+  max_drawdown: -0.1735
+  cum_return: 2.8685
+  total_turnover: 3.3563
+
+factor_model:
+  phase: 1                          # 1=分位多空近似; 2=完整Barra截面回归
+  winsorize_mad: 3                  # 去极值 3MAD
+  neutralize: ["industry", "size"]  # 行业 + 市值中性化
+  industry_scheme: "citic_l1"       # 行业分类口径(报告为CNE6 32行业, 工程上可用中信一级近似, 待确认)
+  n_industries: 32
+  wls_weight: "sqrt_float_mv"       # WLS权重 = sqrt(流通市值)
+  quantile: 0.2                     # Phase1 分位多空法 Top/Bottom 20%
+
+macro:
+  entropy_window: 52                # 滚动52周
+  invalid_ratio_threshold: 0.2      # 周度无效值占比>20%剔除
+  weekly_agg: "mean"                # 日频->周频 算术平均
+  epsilon: 1.0e-12
+
+prediction:
+  logistic_window: 104              # 滚动104周回归窗口
+  label_window: 4                   # Cumulative/Trend 标签的滚动窗口
+  ar_lags: 4                        # 自变量: 因子近4周收益滞后项
+  prob_threshold: 0.5
+  labels: ["cumulative", "single_week", "trend"]
+  # 对账: Trend 标签样本外准确率应 ≈70% (表6)
+  trend_accuracy_target: 0.70
+
+portfolio:
+  n_select: 8                       # 贪心算法选 Z=8 个指数
+  diversity_weight: 0.5             # w_d
+  strength_map: {0: -1.0, 1: -0.33, 2: 0.33, 3: 1.0}   # Composite -> Style strength
+  exposure_window_months: 24        # 成分股近2年月度收益回归
+  constituent_weight_date: "last_month_end"             # 最近月末成分股权重
+
+etf:
+  min_listed_days: 30               # 剔除上市<30个交易日
+  liquidity_window: 30              # 近30交易日平均成交额最大者
+  weight_by: "norm_score"           # ETF权重 ∝ 追踪指数 Norm_score, 归一化100%
+
+paths:
+  raw: "data/raw"
+  interim: "data/interim"
+  processed: "data/processed"
+  outputs: "outputs"

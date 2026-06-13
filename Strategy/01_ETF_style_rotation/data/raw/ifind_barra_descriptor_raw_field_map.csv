@@ -1,0 +1,24 @@
+﻿descriptor,style_factor,required_raw_fields,required_file,current_status,ifind_fetch_needed,fallback_method
+LNCAP,size,"date,code,float_mv",stock_daily,partial,yes,iFinD 日频流通市值；当前仅 2024 起
+MIDCAP,size,"date,code,float_mv",stock_daily,partial,yes,由 LNCAP 截面回归残差计算
+HBETA,volatility,"date,code,close_adj/return; index_daily benchmark 000985.CSI","stock_daily,index_daily",partial,yes,252 日半衰 63 加权回归
+HSIGMA,volatility,"date,code,close_adj/return; index_daily benchmark","stock_daily,index_daily",partial,yes,Beta 回归残差波动
+DASTD,volatility,"date,code,close_adj/return",stock_daily,partial,yes,252 日半衰 42 日收益波动
+CMRA,volatility,"date,code,close_adj/return",stock_daily,partial,yes,12 个月累积收益范围
+STOM,liquidity,"date,code,turnover",stock_daily,partial,yes,21 日换手求和取对数
+STOQ,liquidity,"date,code,turnover",stock_daily,partial,yes,近 3 月月换手均值
+STOA,liquidity,"date,code,turnover",stock_daily,partial,yes,近 12 月月换手均值
+ATVR,liquidity,"date,code,turnover/volume/float_shares",stock_daily,partial,yes,年化交易量比率；需确认 iFinD 口径
+STREV,momentum,"date,code,close_adj/return",stock_daily,partial,yes,近 1 月半衰收益
+HALPHA,momentum,"date,code,close_adj/return; index_daily benchmark","stock_daily,index_daily",partial,yes,252 日半衰 63 alpha
+DTOA,leverage,"code,report_date,ann_date,publish_date,total_assets,total_liabilities/dtoa",stock_financials,not_strict_pit,yes,必须公告日 PIT
+VSAL,earning_variability,"code,report_date,ann_date,revenue annual 5y",stock_financials,not_strict_pit,yes,5 年收入波动
+VERN,earning_variability,"code,report_date,ann_date,net_profit annual 5y",stock_financials,not_strict_pit,yes,5 年利润波动
+ATO,profitability,"code,report_date,ann_date,ato or revenue,total_assets TTM",stock_financials,not_strict_pit,yes,TTM 总资产周转率
+ROA,profitability,"code,report_date,ann_date,roa/net_profit_ttm,total_assets",stock_financials,not_strict_pit,yes,TTM 总资产收益率
+GPM,profitability,"code,report_date,ann_date,gpm/gross_profit,revenue",stock_financials,not_strict_pit,yes,TTM 毛利率
+BTOP,value,"code,date,total_mv; report_date,ann_date,bps/total_equity","stock_daily,stock_financials",not_strict_pit,yes,净资产/市值或 BPS/价格
+ETOP,value,"code,date,total_mv; report_date,ann_date,net_profit_ttm/eps_ttm","stock_daily,stock_financials",not_strict_pit,yes,盈利收益率，PIT 硬要求
+EGRO,growth,"code,report_date,ann_date,eps annual 5y",stock_financials,not_strict_pit,yes,EPS 5 年回归斜率/均值
+SGRO,growth,"code,report_date,ann_date,revenue annual 5y",stock_financials,not_strict_pit,yes,收入 5 年回归斜率/均值
+DTOP,dividend,"code,date,total_mv; dividend_ttm/div_yield; ann_date/ex_date","stock_daily,stock_financials/dividend",not_strict_pit,yes,近 12 月分红/市值；需分红 PIT

@@ -1,0 +1,62 @@
+# ============================================================
+# Barra-CNE6: 23个三级描述变量 -> 10个合成风格因子 (报告 表2/表3)
+# descriptors: 每个描述变量的计算口径参数
+# composites: 合成公式 (与表3完全一致)
+# ============================================================
+
+descriptors:
+  # ---- 规模 ----
+  LNCAP:   {desc: 流通市值自然对数, params: {mv_field: float_mv}}
+  MIDCAP:  {desc: 非线性市值(LNCAP^3 对 LNCAP 回归取残差), params: {}}
+  # ---- 波动率 ----
+  HBETA:   {desc: 历史Beta, params: {window_days: 252, halflife: 63, benchmark: "000985.CSI"}}
+  HSIGMA:  {desc: Beta回归残差波动率, params: {window_days: 252, halflife: 63}}
+  DASTD:   {desc: 日收益率标准差, params: {window_days: 252, halflife: 42}}
+  CMRA:    {desc: 累积收益率范围, params: {months: 12}}
+  # ---- 流动性 ----
+  STOM:    {desc: 月度换手率(ln of sum), params: {window_days: 21}}
+  STOQ:    {desc: 季度换手率, params: {window_days: 63, n_months: 3}}
+  STOA:    {desc: 年度换手率, params: {window_days: 252, n_months: 12}}
+  ATVR:    {desc: 年化交易量比率, params: {window_days: 252, halflife: 63}}
+  # ---- 动量 ----
+  STREV:   {desc: 短期反转(近1月收益), params: {window_days: 21, halflife: 10}}
+  HALPHA:  {desc: 历史Alpha(Beta回归截距), params: {window_days: 252, halflife: 63}}
+  # ---- 杠杆 ----
+  DTOA:    {desc: 资产负债率, params: {report: latest}}
+  # ---- 盈利变异性 ----
+  VSAL:    {desc: 营业收入波动(近5年std/abs(mean)), params: {years: 5}}
+  VERN:    {desc: 净利润波动(近5年std/abs(mean)), params: {years: 5}}
+  # ---- 盈利能力 ----
+  ATO:     {desc: 总资产周转率(TTM), params: {}}
+  ROA:     {desc: 总资产收益率(TTM), params: {}}
+  GPM:     {desc: 毛利率(TTM), params: {}}
+  # ---- 价值 ----
+  BTOP:    {desc: 账面市值比, params: {}}
+  ETOP:    {desc: 盈利收益率(TTM净利润/总市值), params: {}}
+  # ---- 成长 ----
+  EGRO:    {desc: 每股盈利增长率(近5年回归斜率/均值), params: {years: 5}}
+  SGRO:    {desc: 营业收入增长率(近5年回归斜率/均值), params: {years: 5}}
+  # ---- 股息 ----
+  DTOP:    {desc: 股息率(近12月分红/市值), params: {}}
+
+composites:
+  size:                {formula: "(LNCAP + MIDCAP) / 2",
+                        weights: {LNCAP: 0.5, MIDCAP: 0.5}}
+  volatility:          {formula: "0.5*HBETA + (HSIGMA + DASTD + CMRA)/6",
+                        weights: {HBETA: 0.5, HSIGMA: 0.16667, DASTD: 0.16667, CMRA: 0.16667}}
+  liquidity:           {formula: "(STOM + STOQ + STOA + ATVR)/4",
+                        weights: {STOM: 0.25, STOQ: 0.25, STOA: 0.25, ATVR: 0.25}}
+  momentum:            {formula: "(STREV + HALPHA)/2",
+                        weights: {STREV: 0.5, HALPHA: 0.5}}
+  leverage:            {formula: "DTOA",
+                        weights: {DTOA: 1.0}}
+  earning_variability: {formula: "(VSAL + VERN)/2",
+                        weights: {VSAL: 0.5, VERN: 0.5}}
+  profitability:       {formula: "(ATO + ROA + GPM)/3",
+                        weights: {ATO: 0.33333, ROA: 0.33333, GPM: 0.33333}}
+  value:               {formula: "(BTOP + ETOP)/2",
+                        weights: {BTOP: 0.5, ETOP: 0.5}}
+  growth:              {formula: "(EGRO + SGRO)/2",
+                        weights: {EGRO: 0.5, SGRO: 0.5}}
+  dividend:            {formula: "DTOP",
+                        weights: {DTOP: 1.0}}

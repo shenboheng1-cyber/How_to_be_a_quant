@@ -1,0 +1,97 @@
+# ============================================================
+# 16个宏观指标 × 5大类 (报告 表4)
+# direction: 1=正向, -1=负向
+# choice_edb_code: 东方财富Choice EDB指标代码
+#   ⚠️ 全部标 TODO_CONFIRM 的需要你在 Choice 终端 EDB数据浏览器 中
+#   搜索指标名称, 复制其 EMM/EMG 代码后填入, 见 docs/DATA_FIELDS.md
+# freq: 原始频率 (d=日, w=周)
+# ============================================================
+
+categories:
+  consumption:
+    cn_name: 消费类
+    indicators:
+      - name: 乘用车日均销量_厂家零售_当周
+        choice_edb_code: EMI01669967
+        direction: 1
+        freq: w
+      - name: 乘用车日均销量_厂家批发_当周
+        choice_edb_code: EMI01669969
+        direction: 1
+        freq: w
+      - name: 电影票房收入
+        choice_edb_code: EMI01735960   # 当日电影票房:全国(日频)。注: 取数后检查历史起点; 周频备选EMI00183089不用(周锚错位)
+        direction: 1
+        freq: d
+      - name: 中国轻纺城成交量
+        # Choice EDB 无成交量序列(仅有柯桥景气/价格指数, 月频且口径不符, 不替用)。
+        # 方案A(当前): 置 enabled:false, 消费类用3指标(零售/批发/票房)跑
+        # 方案B: 从轻纺城官网qfc.cn导出成交量, 走 notebook 8.1 手动CSV通道, 然后改 enabled:true
+        choice_edb_code: MANUAL_CSV
+        enabled: false
+        direction: 1
+        freq: d
+
+  export:
+    cn_name: 出口类
+    indicators:
+      - name: 中国出口集装箱运价指数CCFI_综合指数
+        choice_edb_code: EMI00107705
+        direction: 1
+        freq: w
+      - name: 中国沿海散货运价指数CBFI_综合指数
+        choice_edb_code: EMI00107703
+        direction: 1
+        freq: w
+
+  industrial:
+    cn_name: 工业生产类
+    indicators:
+      - name: 三峡水库站_出库流量
+        choice_edb_code: EMM01589024
+        direction: 1
+        freq: d
+      - name: 三峡水库站_入库流量
+        choice_edb_code: EMM01589026
+        direction: 1
+        freq: d
+      - name: 生产资料价格指数
+        choice_edb_code: EMM01526663
+        direction: 1
+        freq: w
+
+  credit:
+    cn_name: 信贷类
+    indicators:
+      - name: SHIBOR_1周
+        choice_edb_code: E1300076
+        direction: -1
+        freq: d
+      - name: SHIBOR_1年
+        choice_edb_code: E1300082
+        direction: -1
+        freq: d
+      - name: 国债到期收益率_1年
+        choice_edb_code: E1002640
+        direction: -1
+        freq: d
+      - name: 国债到期收益率_10年
+        choice_edb_code: E1002649
+        direction: -1
+        freq: d
+      - name: DR007
+        choice_edb_code: E1300004
+        direction: -1
+        freq: d
+      - name: 中债新综合指数
+        choice_edb_code: EMM01590538
+        direction: 1
+        freq: d
+
+  fx:
+    cn_name: 汇率类
+    indicators:
+      - name: 美元兑人民币_中间价   # 用户确认: E1717692为中间价口径(非CFETS即期), 与报告略有差异但走势高度一致
+        choice_edb_code: E1717692
+        direction: -1
+        freq: d
