@@ -13,9 +13,13 @@ Here's what I need to do.
 They are what I definately need to know cause they are the fundimental thing for Quant.
 - 廖雪峰：https://liaoxuefeng.com/books/python/introduction/index.html
 
+- other learning materials:
+  https://www.sololearn.com/en/learn
+  https://leetcode.cn/studyplan/programming-skills/
+
 ## 02_Practice
 ### Factor Digging
-
+No hurry
 ### ETF
   
 ## 03_Math
@@ -26,5 +30,5 @@ They are what I definately need to know cause they are the fundimental thing for
 
 ## 00_Others
 Fama-French: https://youtu.be/_M5bXsNuvsU?si=-9T1sSn2AmdaZteK
-
+awsome_quant: https://github.com/wilsonfreitas/awesome-quant.git
 
