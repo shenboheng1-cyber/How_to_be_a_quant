@@ -1,0 +1,21 @@
+{
+  "basis": "close_hfq",
+  "cost_bps": 5.0,
+  "stitched_test": {
+    "start": "2023-01-03",
+    "end": "2026-06-05",
+    "trading_days": 827,
+    "total_return": 0.38103094761532663,
+    "annual_return": 0.10337261324311875,
+    "annual_volatility": 0.09646255500781208,
+    "sharpe_rf0": 1.0716346175440519,
+    "max_drawdown": -0.07504617124108226,
+    "calmar": 1.3774535267234238
+  },
+  "chosen_ids": [
+    "eff_heavy__risk_light__balanced",
+    "eff_heavy__risk_light__balanced",
+    "mom_heavy__risk_defensive__balanced",
+    "hit_quality__risk_light__defensive"
+  ]
+}

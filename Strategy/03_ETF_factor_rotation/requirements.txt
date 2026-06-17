@@ -1,0 +1,6 @@
+pandas>=2.0
+numpy>=1.24
+pyarrow>=14.0
+matplotlib>=3.7
+tushare>=1.4   # 仅幸存者偏差检验需要 (fetch_delisted_etf.py)，需自备 token
+# 报告导出 (build_report_docs.py) 需系统安装 pandoc + xelatex，非 pip 包

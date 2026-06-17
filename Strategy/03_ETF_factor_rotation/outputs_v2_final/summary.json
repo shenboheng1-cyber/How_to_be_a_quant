@@ -1,0 +1,32 @@
+{
+  "summary": {
+    "start": "2018-01-02",
+    "end": "2026-06-05",
+    "annual_return": 0.07568168205656334,
+    "annual_volatility": 0.0743802784468416,
+    "sharpe": 1.0174966219123773,
+    "max_drawdown": -0.07602580249343494,
+    "total_return": 0.8060889889028977
+  },
+  "params": {
+    "basis": "close_hfq(后复权市价)",
+    "version": "v2",
+    "factor_weights": {
+      "combo_eff_accel": 0.45,
+      "momentum_12_1": 0.35,
+      "fund_hit_rate_20": 0.2,
+      "vol_60d": -0.15,
+      "max_drawdown_60d": 0.1
+    },
+    "top_n": 20,
+    "max_per_theme": 3,
+    "max_weight": 0.12,
+    "buffer_rank": 35,
+    "volatility_target": 0.18,
+    "rebalance_lambda": 0.4,
+    "cash_code": "511880",
+    "transaction_cost_bps": 5.0,
+    "start": "2018-01-02",
+    "end": "2026-06-05"
+  }
+}

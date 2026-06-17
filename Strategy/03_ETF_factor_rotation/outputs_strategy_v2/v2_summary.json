@@ -1,0 +1,51 @@
+{
+  "version": "v2",
+  "basis": "close_hfq",
+  "changes": [
+    "去弱市择时(market_nav=None)",
+    "保留 vol-target 0.18",
+    "hysteresis buffer_rank=35",
+    "调仓频率=月度(每1月)",
+    "部分再平衡 lam=0.4"
+  ],
+  "factor_weights": {
+    "combo_eff_accel": 0.45,
+    "momentum_12_1": 0.35,
+    "fund_hit_rate_20": 0.2,
+    "vol_60d": -0.15,
+    "max_drawdown_60d": 0.1
+  },
+  "portfolio": {
+    "top_n": 20,
+    "max_per_theme": 3,
+    "max_weight": 0.12,
+    "buffer_rank": 35,
+    "volatility_target": 0.18,
+    "rebalance_every_months": 1,
+    "rebalance_lambda": 0.4
+  },
+  "metrics_vs_v1": {
+    "v1": {
+      "label": "V1 完整(弱市+vol目标)",
+      "ann": 0.09670312109803292,
+      "sharpe_gross": 1.2036709053057577,
+      "sharpe_5bps": 1.111467496987551,
+      "mdd": -0.07422982751233231,
+      "turn_mo": 1.0789129089779508,
+      "turn_yr": 13.580987959044688,
+      "sharpe_1亿": 0.6426108336065384,
+      "sharpe_5亿": 0.09485596549494353
+    },
+    "v2_selected": {
+      "label": "V2·月度·lam=0.4",
+      "ann": 0.07878521613459766,
+      "sharpe_gross": 1.0587602802855052,
+      "sharpe_5bps": 1.0174966219123773,
+      "mdd": -0.07602580249343482,
+      "turn_mo": 0.45825990346279616,
+      "turn_yr": 5.768419470424936,
+      "sharpe_1亿": 0.8868444669866755,
+      "sharpe_5亿": 0.7255410110574612
+    }
+  }
+}

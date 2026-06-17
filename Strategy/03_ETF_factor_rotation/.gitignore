@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# 凭证 / token
+.tushare_token
+*token*.json
+
+# 大数据文件 (本地 dataset 目录, 不入库)
+*.db
+*.sqlite
+# 大体量中间产物 (>100MB 的因子分数面板, 不入库; 小结果 CSV/JSON 保留)
+**/factor_scores.csv
+
+# 报告导出件 (由 build_report_docs.py 生成, 不入库)
+报告_最终版.pdf
+报告_最终版.docx
+_report_build_tmp.md
