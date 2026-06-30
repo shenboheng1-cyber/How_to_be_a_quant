@@ -52,7 +52,8 @@ def main() -> None:
     weights = make_monthly_weights_v2(
         scored, prices, universe,
         top_n=args.top_n, max_per_theme=args.max_per_theme, max_weight=args.max_weight,
-        buffer_rank=args.buffer_rank, volatility_target=args.vol_target, cash_code=args.cash_code,
+        buffer_rank=args.buffer_rank, weighting=args.weighting,
+        volatility_target=args.vol_target, cash_code=args.cash_code,
     )
     equity, effective = backtest_monthly_strategy(
         prices, weights, transaction_cost_bps=args.cost_bps, rebalance_lambda=args.lam)
@@ -65,8 +66,8 @@ def main() -> None:
     summary = summarize_performance(eq.assign(date=eq["date"].dt.strftime("%Y-%m-%d")))
 
     params = {
-        "basis": "close_hfq(后复权市价)", "version": "v2",
-        "factor_weights": FACTOR_WEIGHTS_V2,
+        "basis": "close_hfq(后复权市价)", "version": "v3" if args.weighting == "minvar" else "v2",
+        "factor_weights": FACTOR_WEIGHTS_V2, "weighting": args.weighting,
         "top_n": args.top_n, "max_per_theme": args.max_per_theme, "max_weight": args.max_weight,
         "buffer_rank": args.buffer_rank, "volatility_target": args.vol_target,
         "rebalance_lambda": args.lam, "cash_code": args.cash_code,
@@ -89,7 +90,7 @@ def main() -> None:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="ETF 多因子月度轮动 最终版(V2) — 后复权市价口径")
     p.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR))
-    p.add_argument("--output-dir", default="outputs_v2_final")
+    p.add_argument("--output-dir", default="outputs_v3_final")
     p.add_argument("--start", default="2018-01-02", help="回测起点")
     p.add_argument("--history-start", default="2016-01-01", help="多加载历史供回看因子")
     p.add_argument("--end", default="2026-06-05")
@@ -97,6 +98,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--max-per-theme", type=int, default=3)
     p.add_argument("--max-weight", type=float, default=0.12)
     p.add_argument("--buffer-rank", type=int, default=35, help="hysteresis 名次滞后带")
+    p.add_argument("--weighting", default="minvar", choices=["minvar", "inv_vol", "equal"],
+                   help="加权方案：minvar(V3最终/最小方差) / inv_vol(V2低回撤) / equal")
     p.add_argument("--vol-target", type=float, default=0.18)
     p.add_argument("--lam", type=float, default=0.4, help="部分再平衡系数(每月朝目标移动比例)")
     p.add_argument("--cash-code", default="511880")

@@ -1,109 +1,99 @@
-# 03 · ETF 多因子月度轮动策略
+# 全市场 ETF 多因子月度轮动策略
 
-全市场 ETF 的月度多因子轮动。**后复权市价（close_hfq）口径、含 5bps 成本**，
-回测区间 2018-01-02 ~ 2026-06-05。经无未来函数 / walk-forward 真样本外 / 消融 /
-成本 / 容量 / 幸存者偏差全套稳健性检验。
+后复权市价口径、月度调仓、严格 PIT、含成本、经 walk-forward 验证的中国 ETF 多因子轮动策略。
+完整研究报告见 [`报告_最终版.md`](报告_最终版.md)（含图表与全部稳健性检验）。
 
-> 📄 **完整研究报告**：[`报告_最终版.md`](报告_最终版.md)（含因子审查、稳健性、参数敏感性、实盘清单、全部图表）。
-> 本页为摘要。研究纪要（早期版本）见 [`docs/research_notes.md`](docs/research_notes.md)。
+> **口径**：后复权市价（iFinD `close_hfq`）、含 5bps 成本、区间 2018-01-02 ~ 2026-06-05。
+> 所有结论以 **后复权 + walk-forward + 含成本** 口径为准。
 
 ---
 
-## 1. 一句话定位
+## 终版策略
 
-**低回撤、防御型的小—中资金策略**：全周期年化 7.6%、Sharpe ~1.0、最大回撤仅 −7.6%。
-强项是**控回撤**而非高收益——下跌/震荡年（2018/2022/2023）顶得住，强牛年（2019/2020）
-会明显跑输。适合 0.5–3 亿资金做规则化低波动配置或前向验证。
+**V3 = 后复权市价 · 月度 · 最小方差加权**
 
-## 2. 关键业绩（后复权市价，含成本，2018–2026）
+| 指标 | V3（终版） | 沪深300 | 等权 ETF 篮子 |
+|---|---:|---:|---:|
+| 年化收益 | **10.3%** | 2.0% | 6.6% |
+| Sharpe(rf=0) | **1.02** | 0.11 | 0.40 |
+| 最大回撤 | **-12.4%** | -45.6% | -33.3% |
+| 累计(2018-2026) | **+120.8%** | +17.8% | +67.3% |
 
-| 指标 | 策略 V2 | 沪深300 | 全市场等权 ETF 篮子 |
-|------|---:|---:|---:|
-| 累计收益 | **+80.6%** | +17.8% | +67.3% |
-| 年化收益 | **+7.6%** | +2.0% | +6.6% |
-| 年化波动 | 7.4% | 19.2% | 16.2% |
-| **Sharpe(rf=0)** | **1.02** | 0.11 | 0.40 |
-| 最大回撤 | **−7.6%** | −45.6% | −33.3% |
-| Calmar | **1.00** | 0.04 | 0.20 |
+**低回撤备选 = 多资产分层组合**（类内因子选股 + 类间趋势/风险平价）：年化 7.5% / **Sharpe 1.24** / 回撤 **-9%**，弱市更稳。
 
-> 来源：[`outputs_v2_final/summary.json`](outputs_v2_final/summary.json)。
-> **诚实警告**：纳入 2018-2019 后 Sharpe 统计支撑仅勉强为正（bootstrap 95% CI [0.39, 1.64]、
-> P(Sharpe>1)≈50%）。卖点是低回撤/防御，不是高 Sharpe。详见报告 §5.5。
+### 构造
+- **因子**：`0.45·z(combo_eff_accel) + 0.35·z(momentum_12_1) + 0.20·z(fund_hit_rate_20) − 0.15·z(vol_60d) + 0.10·z(max_drawdown_60d)`
+  （`combo_eff_accel = z(路径效率20d) + z(收益加速度20/60d)`）
+- **组合**：全市场场内 ETF（≥280 日历史，约 1100 只）→ Top-20、同主题≤3、单票≤12% → **最小方差加权**（收缩协方差、PIT）→ 波动目标 18% → 残余进货币 ETF 511880。
+- **降换手**：名次滞后带 `buffer_rank=35` + **部分再平衡 `lam=0.4`**（每月只朝目标移动 40%）→ 年化双边换手约 6.7x。
+- **执行**：信号 T 日月末收盘后生成，`searchsorted(right)+shift(1)` 确保 T+1 后才计收益，无未来函数。
 
-![净值曲线](figures/01_nav.png)
+---
 
-## 3. 策略构造（最终版 V2）
+## 一句话诚实结论
 
-合成打分 `score = Σ wᵢ·z(factorᵢ)`（每日横截面 z-score）：
+在一个八年只涨 6.6%/年（等权篮子）、2%/年（沪深300）的市场里，本策略做到**跑赢大盘 3–4%/年、回撤砍到大盘 1/4**。
+**不加杠杆，这段行情的长仓收益天花板约 10–12% / Sharpe ~1.0；绝对收益受限于市场，而非策略缺陷。**
 
-| 因子 | 权重 | 类型 |
-|------|---:|------|
-| `combo_eff_accel`（路径效率+收益加速度） | +0.45 | 选股 · 收益引擎 |
-| `momentum_12_1`（12月动量跳过最近1月） | +0.35 | 选股 · 正交分散 |
-| `fund_hit_rate_20`（近20日上涨日占比） | +0.20 | 选股 · 弱（建议降权，见报告 §3） |
-| `vol_60d`（60日波动） | −0.15 | 风险 · 惩罚高波动 |
-| `max_drawdown_60d`（60日回撤） | +0.10 | 风险 · 偏好浅回撤 |
+---
 
-组合：Top-20、同主题 ≤3、单票 ≤12%、逆波动加权 + 上限再分配、波动目标 0.18、
-残仓进货币 ETF（511880）。**已去弱市择时**。换手控制：名次滞后带 `buffer_rank=35`
-+ 部分再平衡 `lambda=0.4`（年化双边换手 13.2×→5.8×）。信号 T 日收盘算、**T+1 执行**（严格 PIT）。
+## 稳健性（全部在 `报告_最终版.md` 有证据）
 
-## 4. 稳健性一览
+- ✅ 无未来函数、测试集选参隔离、walk-forward 真样本外拼接
+- ✅ 成本敏感性（5–50bps）、容量/平方根冲击（甜区 ≤1–3 亿）
+- ✅ 消融归因（各风控/分散模块贡献）、bootstrap Sharpe 置信区间、滚动 Sharpe、分年度
+- ✅ 幸存者偏差（并入清盘 ETF，样本外偏差 +0.03）
+- ⚠️ Sharpe ~1.0 统计支撑勉强（bootstrap 95% CI 偏宽）；收益集中于趋势年（2020/2025）
 
-| 检验 | 结论 | 产物 |
-|------|------|------|
-| 无未来函数 | ✅ T+1 执行、单测覆盖 | 代码 + `tests` |
-| Walk-forward 真样本外 | ✅ 2023–2026 拼接 Sharpe 1.07 | `outputs_walk_forward_hfq/` |
-| 消融（模块归因） | ✅ 跨资产分散+逆波动+风险因子三层 | `outputs_robustness_hfq/ablation.csv` |
-| 成本敏感性 | ✅ 30bps 下 Sharpe 仍 0.81 | `outputs_robustness_v2/cost_sweep.csv` |
-| 容量/冲击 | ✅ ≤3 亿甜区，5 亿软上限 | 报告 §5.3 |
-| Bootstrap / 滚动 Sharpe | ⚠️ 支撑勉强为正 | `outputs_robustness_v2/` |
-| 幸存者偏差 | ✅ 并入 122 只清盘 ETF，样本外偏差 +0.03 | `outputs_survivorship/` |
-| 五因子扩展 | ⚠️ walk-forward 选不出，不上 | 报告 §8 |
+## 提升上限的探索（均做真 OOS，诚实留档）
 
-## 5. 目录结构
+| 方向 | 结论 |
+|---|---|
+| 删/拆因子、按 IC 重配 | ❌ OOS 不成立（样本内幻觉） |
+| 资金流因子（场内份额，反向）| IC 显著(t-2.34)但加进组合 walk-forward 仅胜 3/8 年，边际无用 |
+| 主动基金入池 | ❌ 理想化仅 Sharpe 0.91，计赎回费即转负 |
+| 日内数据 | ❌ 快照无历史、对月度无增量、数据量不现实 |
+| **跨资产 GTAA（黄金/债/港/美/商品）** | ✅ 真有效：单独 Sharpe 1.22、与 V3 合并 1.24/回撤-9%（即"低回撤备选"）|
 
-```
-03_ETF_factor_rotation/
-├── 报告_最终版.md              # ★ 完整研究报告（含图）
-├── etf_factor_strategy/        # 核心引擎包 (data/engine/cli/walk_forward_validate/oos_optimize)
-├── hfq_common.py               # 后复权市价口径公共层
-├── strategy_v2.py              # V2 构建 + V1/V2 对照 + 容量曲线
-├── robustness_v2.py            # V2 分年/滚动/bootstrap/成本
-├── robustness_hfq.py           # 消融 + 基准
-├── walkforward_hfq.py          # 市价 walk-forward
-├── factor_diagnostics.py       # 因子审查 (IC/分层/相关/衰减, 最终5因子)
-├── param_sweep.py              # 单参数敏感性
-├── make_charts.py              # 生成 figures/
-├── build_report_docs.py        # 报告 -> docx/pdf (需 pandoc + xelatex)
-├── survivorship_check.py / fetch_delisted_etf.py  # 幸存者偏差
-├── notebooks/ifind_etf_history.ipynb  # 抓取后复权市价 DB
-├── figures/                    # 报告图 01–07
-├── outputs_*/                  # 最终结果 (小体量 CSV/JSON)
-└── docs/research_notes.md      # 早期研究纪要
-```
+唯一能同时提收益与 Sharpe 的是 **杠杆 / 市场中性（股指期货对冲，纯 alpha Sharpe 1.16–1.48）**，均需衍生品。
 
-## 6. 复现
+---
 
-> **数据依赖（不入库）**：行情/净值存于本地 SQLite（数百 MB–GB）。请在
-> [`etf_factor_strategy/data.py`](etf_factor_strategy/data.py) 的 `DEFAULT_DATA_DIR` 改为你本地数据目录
-> （需含 `etf_market_ifind.db`、`nav_store.db`、`idx_store.db`、`bulk_universe.json`）。
-> 后复权市价 DB 由 [`notebooks/ifind_etf_history.ipynb`](notebooks/ifind_etf_history.ipynb) 抓取生成。
+## 复现
 
 ```bash
 pip install -r requirements.txt
-
-python3 -m etf_factor_strategy.cli   # 最终版 V2 一键回测 -> outputs_v2_final/
-python3 factor_diagnostics.py        # 因子 IC/分层/相关/衰减 -> outputs_factor_diag/
-python3 param_sweep.py               # 参数敏感性 -> outputs_param_sweep/
-python3 make_charts.py               # 报告图 -> figures/
-python3 robustness_v2.py             # V2 分年/滚动/bootstrap/成本 -> outputs_robustness_v2/
-python3 robustness_hfq.py            # 消融/基准 -> outputs_robustness_hfq/
-python3 walkforward_hfq.py           # 市价 walk-forward -> outputs_walk_forward_hfq/
-python3 fetch_delisted_etf.py        # 拉清盘 ETF (需 Tushare token)
-python3 survivorship_check.py        # 幸存者偏差 -> outputs_survivorship/
-python3 build_report_docs.py         # 报告 -> docx/pdf (需 pandoc + xelatex)
+python3 -m etf_factor_strategy.cli                      # 终版 V3(最小方差) -> outputs_v3_final/
+python3 -m etf_factor_strategy.cli --weighting inv_vol  # 低回撤版(逆波动)
+python3 factor_diagnostics.py    # 因子 IC/分层/相关/衰减
+python3 robustness_v2.py         # 分年度/滚动/bootstrap/成本
+python3 multi_asset_v2.py        # 跨资产分层组合
+python3 make_charts.py           # 报告所有图 -> figures/
+python3 walkforward_hfq.py       # 市价 walk-forward
 ```
 
-脚本以自身所在目录为根，请在本文件夹根目录下运行。区间起点由 `hfq_common.py` 的 `START`
-与 `cli.py` 的 `--start` 统一控制（默认 2018-01-02）。
+**数据**：行情/份额/估值数据由 iFinD HTTP API 拉取（见 `notebooks/` 与 `*_test.py`），体量大、未入库。
+拉数据前设环境变量（**切勿把 token 硬编码提交**）：
+
+```bash
+export IFIND_REFRESH_TOKEN="你的_refresh_token"
+```
+
+> 数据落地于本地 `dataset/` 目录（`etf_market_ifind.db` 等），不在本仓库。
+
+---
+
+## 关键文件
+
+| 文件 | 内容 |
+|---|---|
+| `报告_最终版.md` | 完整研究报告（含图表、稳健性、实盘清单）|
+| `etf_factor_strategy/engine.py` | 因子/打分/V3权重(最小方差)/回测(含 lam) |
+| `etf_factor_strategy/cli.py` | 一键复现入口（`--weighting` 切 V2/V3）|
+| `hfq_common.py` | 后复权市价回测工具 |
+| `factor_diagnostics.py` / `param_sweep.py` / `make_charts.py` | 因子审查 / 参数敏感性 / 图表 |
+| `robustness_v2.py` / `robustness_hfq.py` / `walkforward_hfq.py` | 稳健性 / 消融 / walk-forward |
+| `multi_asset_v2.py` / `explore_weighting.py` | 跨资产分层 / 加权方案对比 |
+| `flow_*.py` / `active_fund_test.py` / `value_data_pull.py` | 新信号探索（资金流/主动基金/价值）|
+| `notebooks/` | iFinD 数据抓取 notebook |
+| `figures/` | 报告所有图 |

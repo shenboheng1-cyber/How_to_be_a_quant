@@ -1,0 +1,24 @@
+{
+  "walk_forward_hardened": {
+    "start": "2023-01-03",
+    "end": "2026-06-05",
+    "trading_days": 828,
+    "total_return": 0.48658364393018605,
+    "annual_return": 0.12825029151662992,
+    "annual_volatility": 0.09793371685773011,
+    "sharpe_rf0": 1.3095621776812698,
+    "max_drawdown": -0.07642885481804229,
+    "calmar": 1.6780349754286037
+  },
+  "hs300": {
+    "start": "2023-01-03",
+    "end": "2026-06-05",
+    "trading_days": 827,
+    "total_return": 0.2389519377946805,
+    "annual_return": 0.06746874456341279,
+    "annual_volatility": 0.1691824662064154,
+    "sharpe_rf0": 0.39879277135667135,
+    "max_drawdown": -0.24803913984688253,
+    "calmar": 0.27200846045935345
+  }
+}

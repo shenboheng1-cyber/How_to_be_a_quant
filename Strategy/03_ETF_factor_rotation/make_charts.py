@@ -54,7 +54,7 @@ def main():
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.fill_between(dd.index, dd.values * 100, 0, color="#c0392b", alpha=0.5, label="策略 V2")
     ax.plot(ddh.index, ddh.values * 100, color="#7f8c8d", lw=1, label="沪深300")
-    ax.set_title("回撤曲线（策略最大回撤 -7.6% vs 沪深300 -45.6%）")
+    ax.set_title(f"回撤曲线（策略最大回撤 {dd.min()*100:.1f}% vs 沪深300 {ddh.min()*100:.1f}%）")
     ax.set_ylabel("回撤 %"); ax.legend(); ax.grid(alpha=0.3)
     fig.tight_layout(); fig.savefig(FIG / "02_drawdown.png", dpi=130); plt.close(fig)
 

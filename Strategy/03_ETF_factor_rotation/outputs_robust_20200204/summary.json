@@ -1,0 +1,44 @@
+{
+  "original_top10": {
+    "start": "2020-02-04",
+    "end": "2026-06-05",
+    "trading_days": 1538,
+    "total_return": 2.3432040869626003,
+    "annual_return": 0.2186630579858473,
+    "annual_volatility": 0.22983913273640624,
+    "sharpe_rf0": 0.9513743607648556,
+    "max_drawdown": -0.24455405232155536,
+    "calmar": 0.8941297676733447
+  },
+  "robust_v1": {
+    "start": "2020-02-04",
+    "end": "2026-06-05",
+    "trading_days": 1538,
+    "total_return": 1.352469580968751,
+    "annual_return": 0.1504662852301597,
+    "annual_volatility": 0.10382167932767508,
+    "sharpe_rf0": 1.4492761647138073,
+    "max_drawdown": -0.09117604394580392,
+    "calmar": 1.650283108571793
+  },
+  "hs300": {
+    "start": "2020-02-04",
+    "end": "2026-06-05",
+    "trading_days": 1538,
+    "total_return": 0.2724196027195416,
+    "annual_return": 0.04026406061793897,
+    "annual_volatility": 0.1847448385615131,
+    "sharpe_rf0": 0.21794417062716773,
+    "max_drawdown": -0.45602619548225387,
+    "calmar": 0.0882933064302571
+  },
+  "robust_rules": {
+    "top_n": 20,
+    "max_per_theme": 3,
+    "weighting": "inverse 60d volatility",
+    "max_single_risky_weight": 0.12,
+    "volatility_target": 0.18,
+    "weak_market_exposure": 0.6,
+    "cash_code": "511880"
+  }
+}

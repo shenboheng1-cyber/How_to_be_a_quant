@@ -1,0 +1,43 @@
+{
+  "strategy_final_hardened": {
+    "start": "2020-02-04",
+    "end": "2026-06-05",
+    "trading_days": 1538,
+    "total_return": 1.0877112014916137,
+    "annual_return": 0.12817826449608138,
+    "annual_volatility": 0.09031435096722343,
+    "sharpe_rf0": 1.419245813354728,
+    "max_drawdown": -0.07642885481804218,
+    "calmar": 1.6770925693082999
+  },
+  "hs300": {
+    "start": "2020-02-04",
+    "end": "2026-06-05",
+    "trading_days": 1538,
+    "total_return": 0.2724196027195416,
+    "annual_return": 0.04026406061793897,
+    "annual_volatility": 0.1847448385615131,
+    "sharpe_rf0": 0.21794417062716773,
+    "max_drawdown": -0.45602619548225387,
+    "calmar": 0.0882933064302571
+  },
+  "params": {
+    "factor_weights": {
+      "combo_eff_accel": 0.45,
+      "momentum_12_1": 0.35,
+      "fund_hit_rate_20": 0.2,
+      "vol_60d": -0.15,
+      "max_drawdown_60d": 0.1
+    },
+    "top_n": 20,
+    "max_per_theme": 3,
+    "max_weight": 0.12,
+    "volatility_target": 0.18,
+    "weak_market_exposure": 0.6,
+    "cash_code": "511880",
+    "transaction_cost_bps": 5.0,
+    "recent_nav_days": 5,
+    "max_missing_60": 0.1,
+    "max_missing_252": 0.2
+  }
+}

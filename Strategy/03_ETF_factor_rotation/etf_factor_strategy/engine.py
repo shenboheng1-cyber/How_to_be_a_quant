@@ -185,18 +185,21 @@ def make_monthly_weights_v2(
     max_per_theme: int = 3,
     max_weight: float = 0.12,
     buffer_rank: int = 35,
-    weighting: str = "inv_vol",
+    weighting: str = "minvar",
     volatility_target: float | None = 0.18,
     cash_code: str = "511880",
     recent_nav_days: int = 5,
     max_missing_60: float = 0.10,
     max_missing_252: float = 0.20,
+    minvar_lookback: int = 120,
+    minvar_shrink: float = 0.5,
 ) -> pd.DataFrame:
-    """最终版(V2)月度目标权重：相对 robust 版去掉弱市择时、保留 vol-target，并加入名次
-    滞后带(hysteresis)。持仓只要仍排在 ``buffer_rank`` 内即续持，空位才从排名最高的新名补入，
-    以降低换手。配合 ``backtest_monthly_strategy(..., rebalance_lambda<1)`` 做部分再平衡。"""
-    if weighting not in ("inv_vol", "equal"):
-        raise ValueError("weighting must be 'inv_vol' or 'equal'")
+    """最终版(V3)月度目标权重：去弱市择时、保留 vol-target、名次滞后带(hysteresis)。
+    ``weighting`` 默认 ``minvar``（最小方差，收缩协方差、PIT 滚动估计——相关性感知，比逆波动
+    在同风险下更高收益/Sharpe）；可选 ``inv_vol``（V2，回撤更浅）或 ``equal``。
+    配合 ``backtest_monthly_strategy(..., rebalance_lambda<1)`` 做部分再平衡。"""
+    if weighting not in ("inv_vol", "equal", "minvar"):
+        raise ValueError("weighting must be 'inv_vol', 'equal' or 'minvar'")
     meta = universe.copy()
     if "theme" not in meta.columns:
         meta["theme"] = meta.apply(_infer_theme, axis=1)
@@ -241,6 +244,8 @@ def make_monthly_weights_v2(
         picks = pd.Index(selected)
         if weighting == "equal":
             raw_weights = pd.Series(1.0 / len(picks), index=picks)
+        elif weighting == "minvar":
+            raw_weights = _minvar_weights(prices, picks, dt, minvar_lookback, minvar_shrink)
         else:
             vol_row = _last_available_row(vol60, dt)
             inv_vol = 1.0 / vol_row.reindex(picks).replace([np.inf, -np.inf], np.nan)
@@ -447,6 +452,27 @@ def _cap_and_redistribute(weights: pd.Series, max_weight: float) -> pd.Series:
         remaining_total -= max_weight * int(over.sum())
         remaining = remaining[~over]
     return capped
+
+
+def _minvar_weights(prices: pd.DataFrame, picks: pd.Index, date: pd.Timestamp,
+                    lookback: int = 120, shrink: float = 0.5) -> pd.Series:
+    """长仓最小方差权重：PIT 滚动 lookback 日收益估协方差，向对角收缩 shrink 后取 Σ⁻¹·1，
+    负权重截零再归一。无拟合参数（lookback/shrink 固定）。数据不足时回退等权。"""
+    codes = list(picks)
+    R = prices[codes].pct_change(fill_method=None).loc[:date].tail(lookback)
+    cols = [c for c in codes if R[c].notna().sum() >= 40]
+    if len(cols) < 2:
+        return pd.Series(1.0 / len(codes), index=pd.Index(codes))
+    cov = R[cols].fillna(0.0).cov().to_numpy() * 252.0
+    cov = shrink * np.diag(np.diag(cov)) + (1.0 - shrink) * cov
+    try:
+        w = np.linalg.pinv(cov) @ np.ones(len(cols))
+    except np.linalg.LinAlgError:
+        w = np.ones(len(cols))
+    w = np.clip(w, 0.0, None)
+    w = (w / w.sum()) if w.sum() > 0 else (np.ones(len(cols)) / len(cols))
+    s = pd.Series(w, index=cols).reindex(codes).fillna(0.0)
+    return s / s.sum() if s.sum() > 0 else pd.Series(1.0 / len(codes), index=pd.Index(codes))
 
 
 def _last_available_row(frame: pd.DataFrame, date: pd.Timestamp) -> pd.Series:
