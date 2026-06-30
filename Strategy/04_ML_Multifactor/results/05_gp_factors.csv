@@ -1,0 +1,12 @@
+﻿进化出的公式,训练ICIR,样本外ICIR,复杂度,OOS稳健
+std5(((amount / open) + close)),-0.841,-0.969,6,✓
+tsmax10(std5(tsmax10((amount / vwap)))),-0.803,-0.875,6,✓
+rank(std3((amount + std3((amount + tsmax10(amount)))))),-0.774,-0.965,9,✓
+tsmax10(std5(tsmax10(amount))),-0.737,-1.01,4,✓
+std10(volume),-0.603,-0.704,2,✓
+std5((close / low)),-0.539,-0.546,4,✓
+std5(((std60((amount / low)) / open) + vwap)),-0.539,-0.237,9,✓
+std5((amount / adv20)),-0.431,-0.591,4,✓
+std5(((amount / amount) + vwap)),-0.295,-0.681,6,✓
+(low * returns),-0.205,-0.106,3,
+tsmax10(std5(tsmax10((amount / tsmax10(std5(amount)))))),0.207,0.533,8,✓

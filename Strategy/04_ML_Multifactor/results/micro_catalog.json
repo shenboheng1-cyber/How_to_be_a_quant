@@ -1,0 +1,464 @@
+{
+ "factors": [
+  {
+   "name": "avg_trade_size_imb",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount AS DOUBLE) / NULLIF(TRY_CAST(B_Num AS DOUBLE), 0)) - (TRY_CAST(S_Amount AS DOUBLE) / NULLIF(TRY_CAST(S_Num AS DOUBLE), 0))",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "买方单笔成交金额超过卖方，反映知情大户单边吸筹",
+   "theme": "order-splitting"
+  },
+  {
+   "name": "avg_order_size_imb",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount AS DOUBLE) / NULLIF(TRY_CAST(B_Order AS DOUBLE), 0)) - (TRY_CAST(S_Amount AS DOUBLE) / NULLIF(TRY_CAST(S_Order AS DOUBLE), 0))",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "买方单笔委托金额更大说明大额隐单偏买，预示上行",
+   "theme": "order-splitting"
+  },
+  {
+   "name": "num_amount_divergence",
+   "table": "HF_BSImbalance",
+   "daily_formula": "((TRY_CAST(B_Amount AS DOUBLE) - TRY_CAST(S_Amount AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount AS DOUBLE) + TRY_CAST(S_Amount AS DOUBLE), 0)) - ((TRY_CAST(B_Num AS DOUBLE) - TRY_CAST(S_Num AS DOUBLE)) / NULLIF(TRY_CAST(B_Num AS DOUBLE) + TRY_CAST(S_Num AS DOUBLE), 0))",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "金额不平衡强于数量不平衡，说明买方以更大单子单边推动",
+   "theme": "order-flow"
+  },
+  {
+   "name": "order_imbalance_clean",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Order AS DOUBLE) - TRY_CAST(S_Order AS DOUBLE)) / NULLIF(TRY_CAST(B_Order AS DOUBLE) + TRY_CAST(S_Order AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "委托笔数不平衡反映报单意图方向，区别于金额型OFI",
+   "theme": "order-flow"
+  },
+  {
+   "name": "order_imbalance_clean_dyn",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Order AS DOUBLE) - TRY_CAST(S_Order AS DOUBLE)) / NULLIF(TRY_CAST(B_Order AS DOUBLE) + TRY_CAST(S_Order AS DOUBLE), 0)",
+   "window": 60,
+   "agg": "delta",
+   "sign": 1,
+   "hypothesis": "委托笔数不平衡的60日趋势上升反映报单意图持续转向买方，方向性动量",
+   "theme": "dynamics"
+  },
+  {
+   "name": "order_density",
+   "table": "HF_BSImbalance",
+   "daily_formula": "((TRY_CAST(B_Order AS DOUBLE) / NULLIF(TRY_CAST(B_Volume AS DOUBLE), 0)) - (TRY_CAST(S_Order AS DOUBLE) / NULLIF(TRY_CAST(S_Volume AS DOUBLE), 0))) / NULLIF((TRY_CAST(B_Order AS DOUBLE) / NULLIF(TRY_CAST(B_Volume AS DOUBLE), 0)) + (TRY_CAST(S_Order AS DOUBLE) / NULLIF(TRY_CAST(S_Volume AS DOUBLE), 0)), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "每单位成交量的委托密度买侧更高，反映买方拆单隐藏意图",
+   "theme": "order-splitting"
+  },
+  {
+   "name": "vwap_spread_imb",
+   "table": "HF_BSImbalance",
+   "daily_formula": "((TRY_CAST(B_Amount AS DOUBLE) / NULLIF(TRY_CAST(B_Volume AS DOUBLE), 0)) - (TRY_CAST(S_Amount AS DOUBLE) / NULLIF(TRY_CAST(S_Volume AS DOUBLE), 0))) / NULLIF((TRY_CAST(B_Amount AS DOUBLE) / NULLIF(TRY_CAST(B_Volume AS DOUBLE), 0)) + (TRY_CAST(S_Amount AS DOUBLE) / NULLIF(TRY_CAST(S_Volume AS DOUBLE), 0)), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "买方成交均价相对卖方偏高，反映买方愿付溢价、需求强",
+   "theme": "liquidity"
+  },
+  {
+   "name": "small_order_num_imb",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Num_S AS DOUBLE) + TRY_CAST(B_Num_M AS DOUBLE) - TRY_CAST(S_Num_S AS DOUBLE) - TRY_CAST(S_Num_M AS DOUBLE)) / NULLIF(TRY_CAST(B_Num_S AS DOUBLE) + TRY_CAST(B_Num_M AS DOUBLE) + TRY_CAST(S_Num_S AS DOUBLE) + TRY_CAST(S_Num_M AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "散户买单笔数占优是追高情绪，作为反向情绪指标预示回落",
+   "theme": "adverse-selection"
+  },
+  {
+   "name": "super_large_imbalance",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_L AS DOUBLE) - TRY_CAST(S_Amount_L AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(S_Amount_L AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "仅特大单(L档)金额不平衡，剥离B档后更纯粹的机构方向信号",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "super_large_imbalance_w5",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_L AS DOUBLE) - TRY_CAST(S_Amount_L AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(S_Amount_L AS DOUBLE), 0)",
+   "window": 5,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "特大单金额不平衡的短窗(5日)版本，捕捉机构方向的近端冲量",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "large_small_size_ratio",
+   "table": "HF_BSImbalance",
+   "daily_formula": "((TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(B_Amount_B AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_S AS DOUBLE) + TRY_CAST(B_Amount_M AS DOUBLE), 0)) - ((TRY_CAST(S_Amount_L AS DOUBLE) + TRY_CAST(S_Amount_B AS DOUBLE)) / NULLIF(TRY_CAST(S_Amount_S AS DOUBLE) + TRY_CAST(S_Amount_M AS DOUBLE), 0))",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "买侧大小单结构比超过卖侧，反映主力相对散户的参与强度",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "large_order_imb_volatility",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(B_Amount_B AS DOUBLE) - TRY_CAST(S_Amount_L AS DOUBLE) - TRY_CAST(S_Amount_B AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(B_Amount_B AS DOUBLE) + TRY_CAST(S_Amount_L AS DOUBLE) + TRY_CAST(S_Amount_B AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "std",
+   "sign": -1,
+   "hypothesis": "大单不平衡时序波动大表明主力方向不稳，预示反转风险",
+   "theme": "dynamics"
+  },
+  {
+   "name": "large_order_imb_level",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(B_Amount_B AS DOUBLE) - TRY_CAST(S_Amount_L AS DOUBLE) - TRY_CAST(S_Amount_B AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(B_Amount_B AS DOUBLE) + TRY_CAST(S_Amount_L AS DOUBLE) + TRY_CAST(S_Amount_B AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "大单+特大单合并金额不平衡水平，主力净买入方向直接代理",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "retail_imbalance_trend",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_M AS DOUBLE) + TRY_CAST(B_Amount_S AS DOUBLE) - TRY_CAST(S_Amount_M AS DOUBLE) - TRY_CAST(S_Amount_S AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_M AS DOUBLE) + TRY_CAST(B_Amount_S AS DOUBLE) + TRY_CAST(S_Amount_M AS DOUBLE) + TRY_CAST(S_Amount_S AS DOUBLE), 0)",
+   "window": 60,
+   "agg": "delta",
+   "sign": -1,
+   "hypothesis": "散户净买入持续抬升是情绪顶部信号，作为反向指标预示回落",
+   "theme": "dynamics"
+  },
+  {
+   "name": "retail_imbalance_level",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_M AS DOUBLE) + TRY_CAST(B_Amount_S AS DOUBLE) - TRY_CAST(S_Amount_M AS DOUBLE) - TRY_CAST(S_Amount_S AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount_M AS DOUBLE) + TRY_CAST(B_Amount_S AS DOUBLE) + TRY_CAST(S_Amount_M AS DOUBLE) + TRY_CAST(S_Amount_S AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "散户(中小单)净买入水平高反映追涨情绪，反向预示回落",
+   "theme": "adverse-selection"
+  },
+  {
+   "name": "volume_imbalance_stability",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Volume AS DOUBLE) - TRY_CAST(S_Volume AS DOUBLE)) / NULLIF(TRY_CAST(B_Volume AS DOUBLE) + TRY_CAST(S_Volume AS DOUBLE), 0)",
+   "window": 60,
+   "agg": "std",
+   "sign": -1,
+   "hypothesis": "量加权买卖不平衡时序越稳定，趋势越确定、风险越低",
+   "theme": "dynamics"
+  },
+  {
+   "name": "volume_imbalance_level",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Volume AS DOUBLE) - TRY_CAST(S_Volume AS DOUBLE)) / NULLIF(TRY_CAST(B_Volume AS DOUBLE) + TRY_CAST(S_Volume AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "成交量加权买卖不平衡水平为正反映净买压，区别于金额型OFI",
+   "theme": "order-flow"
+  },
+  {
+   "name": "super_large_num_imb",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Num_L AS DOUBLE) - TRY_CAST(S_Num_L AS DOUBLE)) / NULLIF(TRY_CAST(B_Num_L AS DOUBLE) + TRY_CAST(S_Num_L AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "特大单成交笔数(而非金额)买卖不平衡，机构下单频次方向信号",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "big_order_share_buy",
+   "table": "HF_BSImbalance",
+   "daily_formula": "(TRY_CAST(B_Amount_L AS DOUBLE) + TRY_CAST(B_Amount_B AS DOUBLE)) / NULLIF(TRY_CAST(B_Amount AS DOUBLE), 0) - (TRY_CAST(S_Amount_L AS DOUBLE) + TRY_CAST(S_Amount_B AS DOUBLE)) / NULLIF(TRY_CAST(S_Amount AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "买方成交中大单占比高于卖方，反映机构在买侧更集中、知情买压强",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "relative_spread_quoted",
+   "table": "HF_Spread",
+   "daily_formula": "TRY_CAST(AQsp_equal AS DOUBLE)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "相对报价价差越宽=交易成本越高、流动性越低，横截面预期收益越低；作为相对价差的唯一规范轴(剔除与AEsp近共线的孪生)",
+   "theme": "liquidity"
+  },
+  {
+   "name": "relative_spread_dynamics",
+   "table": "HF_Spread",
+   "daily_formula": "TRY_CAST(AQsp_equal AS DOUBLE)",
+   "window": 20,
+   "agg": "std",
+   "sign": -1,
+   "hypothesis": "相对报价价差的时序波动大代表流动性不稳定/不确定性高，对应较低预期收益",
+   "theme": "dynamics"
+  },
+  {
+   "name": "trade_intensity",
+   "table": "HF_Spread",
+   "daily_formula": "TRY_CAST(Num AS DOUBLE)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "日成交笔数代理流动性/关注度，高活跃股流动性溢价压低远期收益",
+   "theme": "order-flow"
+  },
+  {
+   "name": "weighting_divergence",
+   "table": "HF_Spread",
+   "daily_formula": "(TRY_CAST(Qsp_Amount AS DOUBLE) - TRY_CAST(Qsp_equal AS DOUBLE)) / NULLIF(TRY_CAST(Qsp_equal AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "金额加权价差高于等权说明大单系统性在更宽价差成交：大额/知情拆单与价格冲击的特征",
+   "theme": "order-splitting"
+  },
+  {
+   "name": "time_concentration_premium",
+   "table": "HF_Spread",
+   "daily_formula": "(TRY_CAST(Qsp_time AS DOUBLE) - TRY_CAST(Qsp_equal AS DOUBLE)) / NULLIF(TRY_CAST(Qsp_equal AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "时间加权价差高于等权说明价差在主导交易日的时段偏宽：流动性需求/价格压力的时间聚集",
+   "theme": "liquidity"
+  },
+  {
+   "name": "effective_spread_ratio",
+   "table": "HF_Spread",
+   "daily_formula": "(TRY_CAST(Esp_equal AS DOUBLE) / NULLIF(TRY_CAST(Qsp_equal AS DOUBLE), 0))",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "有效价差/报价价差：比值低=成交改善至报价内=市场质量高；规模无关的执行质量信号",
+   "theme": "adverse-selection"
+  },
+  {
+   "name": "effective_spread_level",
+   "table": "HF_Spread",
+   "daily_formula": "TRY_CAST(Esp_equal AS DOUBLE)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "有效价差水平直接度量真实交易成本，高成本对应低流动性、低预期收益",
+   "theme": "liquidity"
+  },
+  {
+   "name": "order_size_mean",
+   "table": "HF_VPIN",
+   "daily_formula": "AVG(TRY_CAST(Volume AS DOUBLE) / NULLIF(TRY_CAST(Num_1 AS DOUBLE), 0))",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "日均每笔成交量(Volume/Num_1)越大，机构/大单参与度越高、逆向选择越低，预期收益越高",
+   "theme": "order-splitting"
+  },
+  {
+   "name": "trade_count",
+   "table": "HF_VPIN",
+   "daily_formula": "AVG(TRY_CAST(Num_1 AS DOUBLE))",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "日均成交笔数度量交易活跃度与关注度，活跃度高代表流动性好、订单流充裕",
+   "theme": "order-flow"
+  },
+  {
+   "name": "vpin_trend",
+   "table": "HF_VPIN",
+   "daily_formula": "AVG(TRY_CAST(VPIN AS DOUBLE))",
+   "window": 20,
+   "agg": "delta",
+   "sign": 1,
+   "hypothesis": "VPIN(知情交易概率)的20日趋势上升，代表知情交易压力上行，区别于水平型vpin",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "vpin_level",
+   "table": "HF_VPIN",
+   "daily_formula": "AVG(TRY_CAST(VPIN AS DOUBLE))",
+   "window": 60,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "VPIN水平高代表逆向选择/知情交易风险高，非知情者要求补偿，事后收益可被压低(与已有vpin不同窗口与符号取向，作为长窗稳健版)",
+   "theme": "informed-trading"
+  },
+  {
+   "name": "volume_trend",
+   "table": "HF_VPIN",
+   "daily_formula": "AVG(TRY_CAST(Volume AS DOUBLE))",
+   "window": 20,
+   "agg": "delta",
+   "sign": 1,
+   "hypothesis": "日成交量20日趋势上升反映参与度与动量增强，delta度量趋势",
+   "theme": "dynamics"
+  },
+  {
+   "name": "vpin_bucket_disagreement",
+   "table": "HF_VPIN",
+   "daily_formula": "STDDEV_POP(TRY_CAST(VPIN AS DOUBLE))",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "N=8与N=50两个VPIN估计的离散度度量信号不稳定性，分歧大=噪声大、不确定性高、预期收益低",
+   "theme": "realized-vol"
+  },
+  {
+   "name": "order_size_trend",
+   "table": "HF_VPIN",
+   "daily_formula": "AVG(TRY_CAST(Volume AS DOUBLE) / NULLIF(TRY_CAST(Num_1 AS DOUBLE), 0))",
+   "window": 60,
+   "agg": "delta",
+   "sign": 1,
+   "hypothesis": "每笔成交规模的60日趋势上升反映大单参与度提升、机构持续进场",
+   "theme": "dynamics"
+  },
+  {
+   "name": "jump_relative_variance",
+   "table": "HF_StockJump",
+   "daily_formula": "CASE WHEN TRY_CAST(RV AS DOUBLE) > 0 THEN TRY_CAST(RJV AS DOUBLE) / TRY_CAST(RV AS DOUBLE) ELSE NULL END",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "跳跃方差占比(RJV/RV)高代表收益由不连续跳跃驱动，跳跃风险/信息冲击重，事后预期收益偏低",
+   "theme": "jump"
+  },
+  {
+   "name": "jump_direction_bias",
+   "table": "HF_StockJump",
+   "daily_formula": "(TRY_CAST(Num_P AS DOUBLE) - TRY_CAST(Num_N AS DOUBLE)) / NULLIF(TRY_CAST(Num_P AS DOUBLE) + TRY_CAST(Num_N AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "正跳跃次数相对负跳跃次数占优反映日内上行跳跃倾向，短期动量",
+   "theme": "jump"
+  },
+  {
+   "name": "upside_downside_ratio",
+   "table": "HF_StockJump",
+   "daily_formula": "TRY_CAST(RS_P AS DOUBLE) / NULLIF(TRY_CAST(RS_N AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "上行半方差相对下行半方差越大，分布右偏、尾部偏向上行，预期收益较高",
+   "theme": "semivariance"
+  },
+  {
+   "name": "signed_semivariance_gap",
+   "table": "HF_StockJump",
+   "daily_formula": "(TRY_CAST(RS_P AS DOUBLE) - TRY_CAST(RS_N AS DOUBLE)) / NULLIF(TRY_CAST(RS_P AS DOUBLE) + TRY_CAST(RS_N AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": 1,
+   "hypothesis": "上下行半方差归一化差(signed semivariance)度量已实现偏度方向，右偏预期收益高",
+   "theme": "semivariance"
+  },
+  {
+   "name": "downside_semivariance_share",
+   "table": "HF_StockJump",
+   "daily_formula": "TRY_CAST(RS_N AS DOUBLE) / NULLIF(TRY_CAST(RS_P AS DOUBLE) + TRY_CAST(RS_N AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "下行半方差占总半方差比例高代表下行风险集中，风险厌恶下对应较低事后收益",
+   "theme": "semivariance"
+  },
+  {
+   "name": "realized_volatility_level",
+   "table": "HF_StockJump",
+   "daily_formula": "SQRT(TRY_CAST(RV AS DOUBLE))",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "已实现波动率水平高代表风险/市场压力大，低风险异象下高波动股票预期收益偏低",
+   "theme": "realized-vol"
+  },
+  {
+   "name": "rv_trend_acceleration",
+   "table": "HF_StockJump",
+   "daily_formula": "TRY_CAST(RV AS DOUBLE)",
+   "window": 20,
+   "agg": "delta",
+   "sign": -1,
+   "hypothesis": "已实现方差窗口内上升(波动放大)预示收益均值回复，方向为负",
+   "theme": "dynamics"
+  },
+  {
+   "name": "volatility_of_volatility",
+   "table": "HF_StockJump",
+   "daily_formula": "TRY_CAST(RV AS DOUBLE)",
+   "window": 20,
+   "agg": "std",
+   "sign": -1,
+   "hypothesis": "已实现波动率自身的波动(vol-of-vol)高代表波动状态不稳、不确定性大，预期收益偏低",
+   "theme": "realized-vol"
+  },
+  {
+   "name": "continuous_variance_level",
+   "table": "HF_StockJump",
+   "daily_formula": "SQRT(TRY_CAST(BV AS DOUBLE))",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "双幂次变差BV度量剔除跳跃的连续波动成分，连续波动高对应风险高、预期收益低",
+   "theme": "realized-vol"
+  },
+  {
+   "name": "jump_size_volatility",
+   "table": "HF_StockJump",
+   "daily_formula": "ABS(TRY_CAST(RV AS DOUBLE) - TRY_CAST(BV AS DOUBLE))",
+   "window": 20,
+   "agg": "std",
+   "sign": -1,
+   "hypothesis": "跳跃成分大小(RV-BV)的时序波动大代表跳跃风险不稳定、不可预测，对应较低预期收益",
+   "theme": "jump"
+  },
+  {
+   "name": "jump_size_level",
+   "table": "HF_StockJump",
+   "daily_formula": "GREATEST(TRY_CAST(RV AS DOUBLE) - TRY_CAST(BV AS DOUBLE), 0)",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "跳跃成分水平(RV-BV的正部)高代表不连续信息冲击大，跳跃风险溢价为负向择股",
+   "theme": "jump"
+  },
+  {
+   "name": "z_statistic_extreme",
+   "table": "HF_StockJump",
+   "daily_formula": "CASE WHEN TRY_CAST(Z_Adj AS DOUBLE) > 2.58 THEN TRY_CAST(Z_Adj AS DOUBLE) ELSE 0 END",
+   "window": 20,
+   "agg": "mean",
+   "sign": -1,
+   "hypothesis": "极端跳跃检验统计量(Z>2.58)的平均强度衡量尾部跳跃显著性，跳跃风险暴露高对应较低事后收益",
+   "theme": "jump"
+  },
+  {
+   "name": "jump_frequency_trend",
+   "table": "HF_StockJump",
+   "daily_formula": "TRY_CAST(Num_P AS DOUBLE) + TRY_CAST(Num_N AS DOUBLE)",
+   "window": 60,
+   "agg": "delta",
+   "sign": -1,
+   "hypothesis": "总跳跃次数的60日趋势上升代表跳跃活动加剧、不确定性上行，预示较低收益",
+   "theme": "dynamics"
+  }
+ ]
+}
