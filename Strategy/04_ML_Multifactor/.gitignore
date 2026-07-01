@@ -20,3 +20,10 @@ results/*.parquet
 # ===== 系统 =====
 .DS_Store
 logs/
+
+# ===== 安全防御(2026-07 补) =====
+*.npz
+*.ifind_access_token.json
+config.py
+csmar.py
+*token*.json
